@@ -3,8 +3,8 @@ import { useState } from "react";
 
 import Home from './Pages/Home';
 import Game from './Pages/Game';
-import SignIn from './Pages/SignIn';
-import SignUp from './Pages/SignUp';
+import Login from "./Pages/Login";
+import SignUp from "./Pages/SignUp";
 import Contact from './Pages/Contact';
 import AboutDyslexia from './Pages/AboutDyslexia';
 import Consequences from './Pages/Consequences';
@@ -23,20 +23,20 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/boy" element={<Boy />} />
-        <Route path="/girl" element={<Girl />} />
+      <Route path="/" element={<LandingPage />} />
+  <Route path="/boy" element={<Boy />} />
+  <Route path="/girl" element={<Girl />} />
 
-        <Route path="/About" element={<About />} />
-        <Route path="/Game" element={<Game />} />
-        <Route path="/SignIn" element={<SignIn />} />
-        <Route path="/SignUp" element={<SignUp />} />
-        <Route path="/Contact" element={<Contact />} />
-        <Route path="/AboutDyslexia" element={<AboutDyslexia />} />
-        <Route path="/Symptoms" element={<Symptoms />} />
-        <Route path="/Recovery" element={<Recovery />} />
-        <Route path="/Consequences" element={<Consequences />} />
-        <Route path="/Tips" element={<Tips />} />
+  <Route path="/About" element={<About />} />
+  <Route path="/Games" element={<Game />} />
+  <Route path="/SignUp" element={<SignUp />} />
+  <Route path="/Login" element={<Login />} />
+  <Route path="/Contact" element={<Contact />} />
+  <Route path="/AboutDyslexia" element={<AboutDyslexia />} />
+  <Route path="/Symptoms" element={<Symptoms />} />
+  <Route path="/Recovery" element={<Recovery />} />
+  <Route path="/Consequences" element={<Consequences />} />
+  <Route path="/Tips" element={<Tips />} />
       </Routes>
     </BrowserRouter>
   );
