@@ -13,7 +13,7 @@ export default function Boy() {
             Joy<span className="text-blue-600">Verse</span>
           </div>
 
-          {/* Navigation Buttons */}
+           {/* Navigation Buttons */}
           <div className="flex flex-wrap gap-3 justify-center">
             <Link to="/" className="bg-white text-blue-600 border-2 border-blue-400 font-bold px-4 py-2 rounded-full shadow-md hover:bg-blue-400 hover:text-white transition transform hover:scale-105">
               Home
