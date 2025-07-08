@@ -17,8 +17,13 @@ const app = express();
 
 // ✅ Enable CORS with correct origin for Vercel
 app.use(cors({
-  origin: 'https://joy-verse.vercel.app',  // Your deployed frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: (origin, callback) => {
+    if (!origin || origin.endsWith(".vercel.app")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
