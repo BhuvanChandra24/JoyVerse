@@ -1,11 +1,15 @@
-# Ignore all node_modules folders
+# ------------------------------
+# 🔧 Node.js / React (Frontend)
+# ------------------------------
+
+# Dependencies
 **/node_modules/
 
-# Ignore all dist and build folders
+# Build output
 **/dist/
 **/build/
 
-# Ignore environment variable files anywhere
+# Environment variables
 **/.env
 
 # Logs
@@ -13,16 +17,42 @@
 **/yarn-debug.log*
 **/yarn-error.log*
 
-# Python __pycache__ folders (for flask backend)
+# Package lock files (optional)
+package-lock.json
+yarn.lock
+
+# ------------------------------
+# 🐍 Python / Flask (Backend)
+# ------------------------------
+
+# Python cache
 **/__pycache__/
 **/*.pyc
 
-# OS and editor files
+# Flask-related environment files
+*.env
+
+# ------------------------------
+# 🧪 Large Datasets (Ignored)
+# ------------------------------
+
+flaskbackend/train_faces_mesh.csv
+flaskbackend/test_faces_mesh.csv
+
+# ------------------------------
+# ⚙️ IDEs / OS Files
+# ------------------------------
+
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
+
+# VSCode / JetBrains
 .vscode/
 .idea/
 
-# Lock files (optional - comment if needed)
-package-lock.json
-yarn.lock
+# ------------------------------
+# ✅ End of .gitignore
+# ------------------------------
