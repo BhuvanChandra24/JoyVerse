@@ -16,15 +16,22 @@ dotenv.config();
 const app = express();
 
 // ✅ Enable CORS with correct origin for Vercel
+const allowedOrigins = [
+  "https://joy-verse.vercel.app",
+  "https://joy-verse-lredbyez0-bhuvans-projects-5686451f.vercel.app"
+];
+
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin.endsWith(".vercel.app")) {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS: " + origin));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Parse JSON bodies from incoming requests
