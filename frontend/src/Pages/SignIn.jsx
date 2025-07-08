@@ -26,12 +26,14 @@ const SignIn = () => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:5000/backend/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+  try {
+  const API_BASE = import.meta.env.VITE_BACKEND_URL;
+
+  const res = await fetch(`${API_BASE}/backend/auth/signin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
 
       const data = await res.json();
       setLoading(false);
