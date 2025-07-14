@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import torch
 import numpy as np
+import os
 from emotion_transformer import EmotionTransformer
 
 app = Flask(__name__)
@@ -9,8 +10,11 @@ CORS(app)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# ✅ Load model from relative path
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "joyverse_model.pth")
+
 model = EmotionTransformer(input_size=1404)  # 468 x 3
-model.load_state_dict(torch.load(r'D:\PROJECTS\JoyVerse\flaskbackend\joyverse_model.pth',map_location=device))
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
 
