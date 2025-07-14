@@ -1,34 +1,21 @@
+import os
+import math
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import pandas as pd
 import numpy as np
+import joblib
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from torch.utils.data import Dataset, DataLoader
-import math
 
+# ======= Paths ========
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TRAIN_CSV = os.path.join(BASE_DIR, 'test_faces_mesh.csv')
+TEST_CSV = os.path.join(BASE_DIR, 'train_faces_mesh.csv')
+MODEL_PATH = os.path.join(BASE_DIR, 'joyverse_model.pth')
+ENCODER_PATH = os.path.join(BASE_DIR, 'label_encoder.pkl')
 
-
-train_df = pd.read_csv(r'D:\PROJECTS\JoyVerse\flaskbackend\test_faces_mesh.csv')
-test_df = pd.read_csv(r'D:\PROJECTS\JoyVerse\flaskbackend\train_faces_mesh.csv')
-
-
-X_train = train_df.iloc[:, :-1].values.astype(np.float32)
-y_train = train_df.iloc[:, -1].values
-X_test = test_df.iloc[:, :-1].values.astype(np.float32)
-y_test = test_df.iloc[:, -1].values
-
-
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-label_encoder = LabelEncoder()
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.transform(y_test)
-
-
-
+# ======= Dataset Loader ========
 class FaceMeshDataset(Dataset):
     def __init__(self, X, y):
         self.X = torch.tensor(X, dtype=torch.float32)
@@ -40,14 +27,7 @@ class FaceMeshDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
 
-train_dataset = FaceMeshDataset(X_train, y_train)
-test_dataset = FaceMeshDataset(X_test, y_test)
-
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32)
-
-
-
+# ======= Transformer Model ========
 class PositionalEncoding(nn.Module):
     def __init__(self, dim, max_len=5000):
         super().__init__()
@@ -81,10 +61,6 @@ class TransformerBlock(nn.Module):
         x = self.norm2(x + self.dropout(ff_output))
         return x
 
-# -------------------------------
-# Step 4: Emotion Transformer
-# -------------------------------
-
 class EmotionTransformer(nn.Module):
     def __init__(self, input_size, embed_dim=128, num_heads=4, ff_dim=256, num_classes=7, num_layers=4):
         super().__init__()
@@ -103,71 +79,95 @@ class EmotionTransformer(nn.Module):
         x = x.mean(dim=1)
         return self.classifier(x)
 
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = EmotionTransformer(input_size=X_train.shape[1])
-model.to(device)
-
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
-
-criterion = nn.CrossEntropyLoss()
-
-num_epochs = 5
-best_accuracy = 0.0
-best_model = None
-
-print("\n\U0001f9e0 Training Transformer Model...")
-for epoch in range(1, num_epochs + 1):
-    model.train()
-    total_loss = 0
-    for inputs, labels in train_loader:
-        inputs, labels = inputs.to(device), labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-    avg_loss = total_loss / len(train_loader)
-
-    
-    model.eval()
-    correct, total = 0, 0
-    with torch.no_grad():
-        for inputs, labels in test_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-            correct += (predicted == labels).sum().item()
-            total += labels.size(0)
-    accuracy = 100 * correct / total
-    scheduler.step(avg_loss)
-
-    if accuracy > best_accuracy:
-        best_accuracy = accuracy
-        best_model = model.state_dict()
-
-    print(f"Epoch {epoch}: Loss = {avg_loss:.4f}, Accuracy = {accuracy:.2f}%")
-
-torch.save(best_model, "joyverse_model.pth")
-print(f"\n\u2705 Best Test Accuracy: {best_accuracy:.2f}%")
-print("\u2705 Model saved as joyverse_model.pth")
-
-
-
+# ======= Inference Function ========
 def load_model_and_predict(keypoints):
-    global label_encoder
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = EmotionTransformer(input_size=len(keypoints))
-    model.load_state_dict(torch.load("joyverse_model.pth", map_location=device))
-    model.eval()
-    model.to(device)
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+    model.eval().to(device)
+
+    label_encoder = joblib.load(ENCODER_PATH)
 
     x = torch.tensor(keypoints, dtype=torch.float32).unsqueeze(0).to(device)
     with torch.no_grad():
         output = model(x)
         _, predicted = torch.max(output, 1)
         emotion_index = predicted.item()
+
     return label_encoder.inverse_transform([emotion_index])[0]
+
+# ======= Training Code (runs once locally) ========
+if __name__ == "__main__":
+    print("🧠 Training EmotionTransformer model...")
+
+    # Load CSVs
+    train_df = pd.read_csv(TRAIN_CSV)
+    test_df = pd.read_csv(TEST_CSV)
+
+    X_train = train_df.iloc[:, :-1].values.astype(np.float32)
+    y_train = train_df.iloc[:, -1].values
+    X_test = test_df.iloc[:, :-1].values.astype(np.float32)
+    y_test = test_df.iloc[:, -1].values
+
+    # Preprocess
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    label_encoder = LabelEncoder()
+    y_train = label_encoder.fit_transform(y_train)
+    y_test = label_encoder.transform(y_test)
+    joblib.dump(label_encoder, ENCODER_PATH)
+
+    # DataLoader
+    train_loader = DataLoader(FaceMeshDataset(X_train, y_train), batch_size=32, shuffle=True)
+    test_loader = DataLoader(FaceMeshDataset(X_test, y_test), batch_size=32)
+
+    # Model setup
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = EmotionTransformer(input_size=X_train.shape[1]).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
+    criterion = nn.CrossEntropyLoss()
+
+    # Training loop
+    num_epochs = 5
+    best_accuracy = 0.0
+    best_model = None
+
+    for epoch in range(1, num_epochs + 1):
+        model.train()
+        total_loss = 0
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+        avg_loss = total_loss / len(train_loader)
+
+        # Evaluation
+        model.eval()
+        correct, total = 0, 0
+        with torch.no_grad():
+            for inputs, labels in test_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                _, predicted = torch.max(outputs, 1)
+                correct += (predicted == labels).sum().item()
+                total += labels.size(0)
+        accuracy = 100 * correct / total
+        scheduler.step(avg_loss)
+
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_model = model.state_dict()
+
+        print(f"Epoch {epoch}: Loss = {avg_loss:.4f}, Accuracy = {accuracy:.2f}%")
+
+    # Save best model
+    torch.save(best_model, MODEL_PATH)
+    print(f"\n Best Accuracy: {best_accuracy:.2f}%")
+    print(" Saved model to joyverse_model.pth")
