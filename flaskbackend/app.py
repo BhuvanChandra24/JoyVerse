@@ -10,7 +10,7 @@ CORS(app)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = EmotionTransformer(input_size=1404)  # 468 x 3
-model.load_state_dict(torch.load(r'D:\FinalProject\flaskbackend\joyverse_model.pth',map_location=device))
+model.load_state_dict(torch.load(r'D:\PROJECTS\JoyVerse\flaskbackend\joyverse_model.pth',map_location=device))
 model.to(device)
 model.eval()
 

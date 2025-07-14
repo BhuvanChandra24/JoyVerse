@@ -9,8 +9,8 @@ import math
 
 
 
-train_df = pd.read_csv(r'C:\Users\dell\OneDrive\Desktop\JoyVerse\test_faces_mesh.csv')
-test_df = pd.read_csv(r'C:\Users\dell\OneDrive\Desktop\JoyVerse\train_faces_mesh.csv')
+train_df = pd.read_csv(r'D:\PROJECTS\JoyVerse\flaskbackend\test_faces_mesh.csv')
+test_df = pd.read_csv(r'D:\PROJECTS\JoyVerse\flaskbackend\train_faces_mesh.csv')
 
 
 X_train = train_df.iloc[:, :-1].values.astype(np.float32)

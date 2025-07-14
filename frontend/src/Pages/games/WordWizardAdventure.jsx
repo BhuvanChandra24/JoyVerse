@@ -56,7 +56,7 @@ function WordWizardAdventure({ currentEmotion }) {
   const logGameSession = async (word, isCorrect, isFinal = false) => {
     const emotion = localStorage.getItem("currentEmotion") || "";
     try {
-      await axios.post("http://localhost:5000/backend/games/log-game-session", {
+      await axios.post("${import.meta.env.VITE_BACKEND_URL}/backend/games/log-game-session", {
         userId: currentUser?._id,
         gameName: "WordWizardAdventure",
         sessionId: sessionId.current,
